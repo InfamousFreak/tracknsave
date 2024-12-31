@@ -6,9 +6,14 @@ import (
 	"tracknsave/database"
 	"tracknsave/models"
 	"github.com/gofiber/fiber/v2"
+	"tracknsave/handlers"
+	"tracknsave/config"
+	"tracknsave/middleware"
 )
 
 func main(){
+
+	app := fiber.New()
 	//connect to the database
 	database.Connect()
 	
@@ -18,12 +23,16 @@ func main(){
 		log.Fatal("Failed to run migrations: ", err)
 	}
 
-	app := fiber.New()
+	jwt := middleware.NewAuthMiddleware(config.Secret)
 	
-	//defien  basic routes
+	//define  basic routes
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Welcome to the app")
+		err := c.SendString("Welcome")
+		return err
 	})
+
+	app.Post("/login", handlers.Login)
+	app.Get("/protected", jwt, handlers.Protected)
 
 	log.Fatal(app.Listen(":3000"))
 }
